@@ -103,7 +103,7 @@ let addShopCart = (data) => {
 							userId: data.userId,
 							productdetailsizeId: data.productdetailsizeId,
 							quantity: data.quantity,
-							statusId: 0,
+							statusId: '0',
 						});
 					}
 				}
@@ -127,7 +127,7 @@ let getAllShopCartByUserId = (id) => {
 				});
 			} else {
 				let res = await db.ShopCart.findAll({
-					where: { userId: id, statusId: 0 },
+					where: { userId: id, statusId: '0' },
 				});
 				for (let i = 0; i < res.length; i++) {
 					res[i].productdetailsizeData = await db.ProductDetailSize.findOne({
@@ -185,7 +185,7 @@ let deleteItemShopCart = (data) => {
 				});
 			} else {
 				let res = await db.ShopCart.findOne({
-					where: { id: data.id, statusId: 0 },
+					where: { id: data.id, statusId: '0' },
 				});
 				if (res) {
 					await db.ShopCart.destroy({
