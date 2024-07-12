@@ -1239,139 +1239,239 @@ let getStatisticByDay = (data) => {
 	});
 };
 
-let getStatisticProfit = (data) => {
-	return new Promise(async (resolve, reject) => {
-		try {
-			if (!data.oneDate && !data.twoDate) {
-				resolve({
-					errCode: 1,
-					data: 'Missing required parameter!',
+// let getStatisticProfit = (data) => {
+// 	return new Promise(async (resolve, reject) => {
+// 		try {
+// 			if (!data.oneDate && !data.twoDate) {
+// 				resolve({
+// 					errCode: 1,
+// 					data: 'Missing required parameter!',
+// 				});
+// 			} else {
+// 				let orderProduct = await db.OrderProduct.findAll({
+// 					where: { statusId: 'S6' },
+// 					include: [
+// 						{ model: db.TypeShip, as: 'typeShipData' },
+// 						{ model: db.Voucher, as: 'voucherData' },
+// 						{ model: db.Allcode, as: 'statusOrderData' },
+// 					],
+// 					raw: true,
+// 					nest: true,
+// 				});
+
+// 				for (let i = 0; i < orderProduct.length; i++) {
+// 					orderProduct[i].orderDetail = await db.OrderDetail.findAll({
+// 						where: { orderId: orderProduct[i].id },
+// 					});
+// 					orderProduct[i].voucherData.typeVoucherOfVoucherData =
+// 						await db.TypeVoucher.findOne({
+// 							where: { id: orderProduct[i].voucherData.typeVoucherId },
+// 						});
+
+// 					let totalprice = 0;
+// 					let importPrice = 0;
+
+// 					for (let j = 0; j < orderProduct[i].orderDetail.length; j++) {
+// 						let receiptDetail = await db.ReceiptDetail.findAll({
+// 							where: {
+// 								productDetailSizeId: orderProduct[i].orderDetail[j].productId,
+// 							},
+// 						});
+
+// 						let avgPrice = 0;
+// 						let avgQuantity = 0;
+
+// 						for (let k = 0; k < receiptDetail.length; k++) {
+// 							// avgPrice += receiptDetail[k].quantity * receiptDetail[k].price;
+// 							// avgQuantity += receiptDetail[k].quantity;
+// 							avgPrice += parseFloat(receiptDetail[k].quantity) * parseFloat(receiptDetail[k].price);
+//                             avgQuantity += parseFloat(receiptDetail[k].quantity);
+// 						}
+
+// 						orderProduct[i].orderDetail[j].importPrice = Math.round(
+// 							avgPrice / avgQuantity
+// 						);
+// 					// 	importPrice +=
+// 					// 		Math.round(avgPrice / avgQuantity) *
+// 					// 		orderProduct[i].orderDetail[j].quantity;
+// 					// 	totalprice +=
+// 					// 		orderProduct[i].orderDetail[j].realPrice *
+// 					// 		orderProduct[i].orderDetail[j].quantity;
+// 					// }
+// 					importPrice += parseFloat(Math.round(avgPrice / avgQuantity) * parseFloat(orderProduct[i].orderDetail[j].quantity));
+
+// 					// Tính tổng giá nhập trung bình cho đơn hàng
+// 					orderProduct[i].importPrice = importPrice;
+
+// 					// Tính giá bán cuối cùng sau khi áp dụng giảm giá
+// 					if (orderProduct[i].voucherId) {
+// 						orderProduct[i].totalpriceProduct =
+// 							totalPriceDiscount(totalprice, orderProduct[i]) +
+// 							orderProduct[i].typeShipData.price;
+// 					} else {
+// 						orderProduct[i].totalpriceProduct =
+// 							totalprice + orderProduct[i].typeShipData.price;
+// 					}
+
+// 					// Tính lợi nhuận
+// 					if (orderProduct[i].voucherId) {
+// 						orderProduct[i].profitPrice =
+// 							totalPriceDiscount(totalprice, orderProduct[i]) +
+// 							orderProduct[i].typeShipData.price -
+// 							importPrice;
+// 					} else {
+// 						orderProduct[i].profitPrice =
+// 							totalprice + orderProduct[i].typeShipData.price - importPrice;
+// 					}
+// 				}
+
+// 				// Lọc theo khoảng thời gian
+// 				orderProduct = orderProduct.filter((item) => {
+// 					if (data.type === 'day') {
+// 						let updatedAt = moment
+// 							.utc(item.updatedAt)
+// 							.local()
+// 							.format('DD/MM/YYYY')
+// 							.split('/');
+// 						updatedAt = Number(updatedAt[2] + updatedAt[1] + updatedAt[0]);
+
+// 						let twoDate = moment(data.twoDate).format('DD/MM/YYYY').split('/');
+// 						twoDate = Number(twoDate[2] + twoDate[1] + twoDate[0]);
+// 						let oneDate = moment(data.oneDate).format('DD/MM/YYYY').split('/');
+// 						oneDate = Number(oneDate[2] + oneDate[1] + oneDate[0]);
+
+// 						if (updatedAt >= oneDate && updatedAt <= twoDate) {
+// 							return true;
+// 						}
+// 					} else if (data.type === 'month') {
+// 						let updatedAtMonth = moment.utc(item.updatedAt).local().format('M');
+// 						let updatedAtYear = moment
+// 							.utc(item.updatedAt)
+// 							.local()
+// 							.format('YYYY');
+// 						if (
+// 							moment(data.oneDate).format('M') == updatedAtMonth &&
+// 							moment(data.oneDate).format('YYYY') == updatedAtYear
+// 						) {
+// 							return true;
+// 						}
+// 					} else {
+// 						let updatedAtYear = moment
+// 							.utc(item.updatedAt)
+// 							.local()
+// 							.format('YYYY');
+// 						if (moment(data.oneDate).format('YYYY') == updatedAtYear) {
+// 							return true;
+// 						}
+// 					}
+// 				});
+
+// 				resolve({
+// 					errCode: 0,
+// 					data: orderProduct,
+// 				});
+// 			}
+// 		} catch (error) {
+// 			reject(error);
+// 		}
+// 	});
+// };
+const getStatisticProfit = async (startDate, endDate) => {
+	try {
+		// Lấy các đơn hàng trong khoảng thời gian
+		let orders = await db.Order.findAll({
+			where: {
+				statusId: 4, // Đơn hàng đã hoàn thành
+				createdAt: {
+					[Op.between]: [startDate, endDate],
+				},
+			},
+			include: [
+				{
+					model: db.OrderDetail,
+					as: 'orderDetail',
+				},
+				{
+					model: db.Voucher,
+					as: 'voucher',
+				},
+				{
+					model: db.ShippingType,
+					as: 'typeShipData',
+				},
+			],
+		});
+
+		let totalOrders = orders.length;
+		let totalProductsSold = 0;
+		let totalRevenue = 0;
+		let totalProfit = 0;
+
+		// Duyệt qua từng đơn hàng
+		for (let i = 0; i < orders.length; i++) {
+			let order = orders[i];
+			let totalprice = 0;
+			let importPrice = 0;
+
+			// Duyệt qua từng sản phẩm trong đơn hàng
+			for (let j = 0; j < order.orderDetail.length; j++) {
+				let orderDetail = order.orderDetail[j];
+				let receiptDetail = await db.ReceiptDetail.findAll({
+					where: {
+						productDetailSizeId: orderDetail.productId,
+					},
 				});
-			} else {
-				let orderProduct = await db.OrderProduct.findAll({
-					where: { statusId: 'S6' },
-					include: [
-						{ model: db.TypeShip, as: 'typeShipData' },
-						{ model: db.Voucher, as: 'voucherData' },
-						{ model: db.Allcode, as: 'statusOrderData' },
-					],
-					raw: true,
-					nest: true,
-				});
 
-				for (let i = 0; i < orderProduct.length; i++) {
-					orderProduct[i].orderDetail = await db.OrderDetail.findAll({
-						where: { orderId: orderProduct[i].id },
-					});
-					orderProduct[i].voucherData.typeVoucherOfVoucherData =
-						await db.TypeVoucher.findOne({
-							where: { id: orderProduct[i].voucherData.typeVoucherId },
-						});
+				let avgPrice = 0;
+				let avgQuantity = 0;
 
-					let totalprice = 0;
-					let importPrice = 0;
-
-					for (let j = 0; j < orderProduct[i].orderDetail.length; j++) {
-						let receiptDetail = await db.ReceiptDetail.findAll({
-							where: {
-								productDetailSizeId: orderProduct[i].orderDetail[j].productId,
-							},
-						});
-
-						let avgPrice = 0;
-						let avgQuantity = 0;
-
-						for (let k = 0; k < receiptDetail.length; k++) {
-							avgPrice += receiptDetail[k].quantity * receiptDetail[k].price;
-							avgQuantity += receiptDetail[k].quantity;
-						}
-
-						orderProduct[i].orderDetail[j].importPrice = Math.round(
-							avgPrice / avgQuantity
-						);
-						importPrice +=
-							Math.round(avgPrice / avgQuantity) *
-							orderProduct[i].orderDetail[j].quantity;
-						totalprice +=
-							orderProduct[i].orderDetail[j].realPrice *
-							orderProduct[i].orderDetail[j].quantity;
-					}
-
-					// Tính tổng giá nhập trung bình cho đơn hàng
-					orderProduct[i].importPrice = importPrice;
-
-					// Tính giá bán cuối cùng sau khi áp dụng giảm giá
-					if (orderProduct[i].voucherId) {
-						orderProduct[i].totalpriceProduct =
-							totalPriceDiscount(totalprice, orderProduct[i]) +
-							orderProduct[i].typeShipData.price;
-					} else {
-						orderProduct[i].totalpriceProduct =
-							totalprice + orderProduct[i].typeShipData.price;
-					}
-
-					// Tính lợi nhuận
-					if (orderProduct[i].voucherId) {
-						orderProduct[i].profitPrice =
-							totalPriceDiscount(totalprice, orderProduct[i]) +
-							orderProduct[i].typeShipData.price -
-							importPrice;
-					} else {
-						orderProduct[i].profitPrice =
-							totalprice + orderProduct[i].typeShipData.price - importPrice;
-					}
+				// Tính giá trung bình nhập hàng
+				for (let k = 0; k < receiptDetail.length; k++) {
+					avgPrice +=
+						parseFloat(receiptDetail[k].quantity) *
+						parseFloat(receiptDetail[k].price); // Ép kiểu trước khi cộng
+					avgQuantity += parseFloat(receiptDetail[k].quantity);
 				}
 
-				// Lọc theo khoảng thời gian
-				orderProduct = orderProduct.filter((item) => {
-					if (data.type === 'day') {
-						let updatedAt = moment
-							.utc(item.updatedAt)
-							.local()
-							.format('DD/MM/YYYY')
-							.split('/');
-						updatedAt = Number(updatedAt[2] + updatedAt[1] + updatedAt[0]);
-
-						let twoDate = moment(data.twoDate).format('DD/MM/YYYY').split('/');
-						twoDate = Number(twoDate[2] + twoDate[1] + twoDate[0]);
-						let oneDate = moment(data.oneDate).format('DD/MM/YYYY').split('/');
-						oneDate = Number(oneDate[2] + oneDate[1] + oneDate[0]);
-
-						if (updatedAt >= oneDate && updatedAt <= twoDate) {
-							return true;
-						}
-					} else if (data.type === 'month') {
-						let updatedAtMonth = moment.utc(item.updatedAt).local().format('M');
-						let updatedAtYear = moment
-							.utc(item.updatedAt)
-							.local()
-							.format('YYYY');
-						if (
-							moment(data.oneDate).format('M') == updatedAtMonth &&
-							moment(data.oneDate).format('YYYY') == updatedAtYear
-						) {
-							return true;
-						}
-					} else {
-						let updatedAtYear = moment
-							.utc(item.updatedAt)
-							.local()
-							.format('YYYY');
-						if (moment(data.oneDate).format('YYYY') == updatedAtYear) {
-							return true;
-						}
-					}
-				});
-
-				resolve({
-					errCode: 0,
-					data: orderProduct,
-				});
+				orderDetail.importPrice = avgQuantity
+					? Math.round(avgPrice / avgQuantity)
+					: 0;
+				importPrice +=
+					parseFloat(orderDetail.importPrice) *
+					parseFloat(orderDetail.quantity);
+				totalprice +=
+					parseFloat(orderDetail.realPrice) * parseFloat(orderDetail.quantity);
+				totalProductsSold += parseFloat(orderDetail.quantity); // Cộng số lượng sản phẩm bán được
 			}
-		} catch (error) {
-			reject(error);
+
+			// Kiểm tra khi có voucher
+			if (order.voucherId) {
+				order.totalpriceProduct =
+					parseFloat(totalPriceDiscount(parseFloat(totalprice), order)) +
+					parseFloat(order.typeShipData.price);
+			} else {
+				order.totalpriceProduct =
+					parseFloat(totalprice) + parseFloat(order.typeShipData.price);
+			}
+
+			order.profit =
+				parseFloat(order.totalpriceProduct) - parseFloat(importPrice);
+
+			// Cộng tổng doanh thu và lợi nhuận
+			totalRevenue += parseFloat(order.totalpriceProduct);
+			totalProfit += parseFloat(order.profit);
 		}
-	});
+
+		return {
+			totalOrders,
+			totalProductsSold,
+			totalRevenue,
+			totalProfit,
+		};
+	} catch (error) {
+		console.error(error);
+		return null;
+	}
 };
 
 let getStatisticOverturn = (data) => {
