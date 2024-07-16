@@ -409,13 +409,17 @@ let paymentOrder = (data) => {
 					currency: 'USD',
 					quantity: data.result[i].quantity,
 				});
-				totalPriceProduct += data.result[i].realPrice * data.result[i].quantity;
+				totalPriceProduct +=
+					parseFloat(data.result[i].realPrice) *
+					parseFloat(data.result[i].quantity);
 				console.log(data.total - totalPriceProduct);
 			}
 			listItem.push({
 				name: 'Phi ship + Voucher',
 				sku: '1',
-				price: parseFloat(data.total - totalPriceProduct).toFixed(2) + '',
+				price:
+					(parseFloat(data.total) - parseFloat(totalPriceProduct)).toFixed(2) +
+					'',
 				currency: 'USD',
 				quantity: 1,
 			});
