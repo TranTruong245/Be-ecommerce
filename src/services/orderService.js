@@ -417,9 +417,10 @@ let paymentOrder = (data) => {
 			listItem.push({
 				name: 'Phi ship + Voucher',
 				sku: '1',
-				price:
-					(parseFloat(data.total) - parseFloat(totalPriceProduct)).toFixed(2) +
-					'',
+				price: (parseFloat(data.total) - parseFloat(totalPriceProduct)).toFixed(
+					2
+				),
+
 				currency: 'USD',
 				quantity: 1,
 			});
@@ -440,7 +441,7 @@ let paymentOrder = (data) => {
 						},
 						amount: {
 							currency: 'USD',
-							total: data.total,
+							total: parseFloat(data.total),
 						},
 						description: 'This is the payment description.',
 					},
@@ -481,7 +482,7 @@ let paymentOrderSuccess = (data) => {
 						{
 							amount: {
 								currency: 'USD',
-								total: data.total,
+								total: parseFloat(data.total),
 							},
 						},
 					],
