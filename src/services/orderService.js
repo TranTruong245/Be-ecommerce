@@ -405,7 +405,7 @@ let paymentOrder = (data) => {
 						' | ' +
 						data.result[i].productDetailSize.sizeData.value,
 					sku: data.result[i].productId + '',
-					price: parseFloat(data.result[i].realPrice) + '',
+					price: parseFloat(data.result[i].realPrice),
 					currency: 'USD',
 					quantity: data.result[i].quantity,
 				});
